@@ -37,6 +37,12 @@ docker run --rm -u $(id -u) --cpus 4 \
 
 See `docker run --help` for other throttling options.
 
+Some unnessessary tensorflow output can be silcence
+
+```bash
+docker run --rm -e TF_CPP_MIN_LOG_LEVEL=3 fnndsc/pl-fetal-brain-mask:1.0.0
+```
+
 ## Links
 
 Original source:

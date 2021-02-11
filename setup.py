@@ -13,10 +13,6 @@ setup(
     author_email     = 'dev@babyMRI.org',
     url              = 'https://github.com/FNNDSC/pl-fetal-brain-mask',
     packages         = ['fetal_brain_mask'],
-    install_requires = [
-        'chrisapp',
-        'importlib_resources; python_version<"3.7"'
-    ],
     license          = 'MIT',
     zip_safe         = False,
     python_requires  = '>=3.6',

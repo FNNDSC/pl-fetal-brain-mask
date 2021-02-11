@@ -26,7 +26,7 @@ class Unet:
         weight_path = files(f'{__package__}.data').joinpath('unet_weights.h5')
         self.unet_model.load_weights(str(weight_path))
 
-        self.graph = tf.get_default_graph()
+        self.graph = tf.compat.v1.get_default_graph()
         logger.debug('Model initialized')
 
     @staticmethod

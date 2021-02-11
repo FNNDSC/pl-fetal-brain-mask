@@ -1,11 +1,5 @@
 chrisapp~=2.4.0
 colorlog~=4.7.2
-h5py==2.10.0
-Keras==2.2.4      
-Keras-Applications==1.0.8
-Keras-Preprocessing==1.1.0
-MedPy==0.4.0
-numpy==1.16.4     
-opencv-python==4.0.0.21   
-opencv-python-headless==4.0.0.21
-scikit-image==0.14.5
+nibabel~=3.2.1
+Keras~=2.2.4
+importlib_resources; python_version<"3.7"
