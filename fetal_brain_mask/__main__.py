@@ -1,4 +1,4 @@
-from fetal_brain_mask.fetal_brain_mask import Fetal_brain_mask
+from fetal_brain_mask.app import Fetal_brain_mask
 
 
 def main():

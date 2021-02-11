@@ -1,45 +1,43 @@
-# Brain Masking Tool
+# Fetal Brain Mask
 
-The aim of this project is to execute an automatic masking of fetal brain images using deep learning.
+[![Version](https://img.shields.io/docker/v/fnndsc/pl-fetal-brain-masking?sort=semver)](https://hub.docker.com/r/fnndsc/pl-fetal-brain-masking)
+[![MIT License](https://img.shields.io/github/license/fnndsc/pl-fetal-brain-masking)](https://github.com/FNNDSC/pl-fetal-brain-masking/blob/master/LICENSE)
 
-It takes as an input the path of a target directory and executes the masking of all .nii files.
-The output will be an extra .nii file for each one of them, ending with the exact same name ending with "_mask.nii".
+Automatic brain image masking tool for fetal brain MRI using deep learning.
 
-## Requirements</b>
-- Python3
-- pip
+For each `.nii` or `.nii.gz` file in a directory, a `_mask.nii` is produced.
 
-## Installation</b>
+![Figure](docs/fetal_brain_mask.png)
 
-For an easy use of the tool is highly recommended to create a virtual environment and install the dependencies found in the requirements.txt file.
+##  Usage
 
-- ### Setting a virtual environment
+Single sample
 
-<br>Access to your terminal and type the following:</br>
-<br><code>$ pip install virtualenv virtualenvwrapper</code></br>
-<br>Then create a directory for the virtual environments:</br>
-<br><code>$ mkdir ~/python-envs </code>  
-<br>Now you'll add to your .bashrc file these two lines:</br>
-<br><code>$ export WORKON_HOME=~python-envs</code></br>
-<br><code>$ source /usr/share/virtualenvwrapper/virtualenvwrapper.sh</code></br>
-<i><br>(If this path to virtualenvwrapper.sh doesn't work, try with:)</br></i>
-<br><code>$ /usr/share/virtualenvwrapper/virtualenvwrapper.sh</code></br>
-<br>Now you're ready to source your .bashrc and create a Python3 environment:</br>
-<br><code>$ source .bashrc</code></br>
-<br><code>$ mkvirtualenv --python=python3 python_env</code></br>
-<br><code>$ workon python_env</code></br>
-<br><i>(Note that "python_env" is a suggested name, you can replace it with any desired name for your environment)</i></br>
-<br>And finally when you're done working you can deactivate the environment with:</br>
-<br><code>$ deactivate</code></br>
+```bash
+mkdir in out
+mv scan.nii.gz in
 
-- ### Running the tool
+docker run --rm -u $(id -u) \
+    -v $PWD/in:/incoming -v $PWD/out:/outgoing \
+    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
+    --inputPathFilter scan.nii.gz --suffix _mask.nii \
+    --skipped-list skipped.txt
+```
 
-Once you're in your own environment access to the desired location and type the following commands:
-<br><code>$ git clone https://github.com/chrisorozco1097/masking_tool</code></br>
-<br><code>$ cd masking_tool</code></br>
-<br>Now install the requirements</br>
-<br><code>$ pip install -r requirements.txt</code></br>
-<br>And finally execute the tool:</br>
-<br><code>$ python brain_mask.py --target_dir path_to_your_directory</code></br>
-<br>If you don't specify a directory the tool will target the .nii files found in the local directory.</br>
-<br>You will have to activate the environment every time you want to run the tool.</br>
+Multiple inputs are processed in parallel, using all the cores visible inside the container.
+For large datasets, you can limit the number of concurrent jobs with `docker run --cpus N ...`
+
+```bash
+docker run --rm -u $(id -u) --cpus 4 \
+    -v $PWD/in:/incoming -v $PWD/out:/outgoing \
+    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
+    --inputPathFilter scan.nii.gz --suffix _mask.nii \
+    --skipped-list skipped.txt
+```
+
+See `docker run --help` for other throttling options.
+
+## Links
+
+Original source:
+https://github.com/chrisorozco1097/masking_tool

@@ -1,7 +1,7 @@
 from os import path
 from setuptools import setup
 
-with open(path.join(path.dirname(path.abspath(__file__)), 'README.rst')) as f:
+with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
     readme = f.read()
 
 setup(
@@ -13,12 +13,15 @@ setup(
     author_email     = 'dev@babyMRI.org',
     url              = 'https://github.com/FNNDSC/pl-fetal-brain-mask',
     packages         = ['fetal_brain_mask'],
-    install_requires = ['chrisapp'],
+    install_requires = [
+        'chrisapp',
+        'importlib_resources; python_version<"3.7"'
+    ],
     license          = 'MIT',
     zip_safe         = False,
     python_requires  = '>=3.6',
     package_data     = {
-        'fetal_brain_mask': ['json_models/*.json', 'weights/*.h5']
+        'fetal_brain_mask': ['data/*']
     },
     entry_points     = {
         'console_scripts': [
