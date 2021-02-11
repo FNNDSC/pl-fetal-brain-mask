@@ -1,5 +1,5 @@
 chrisapp~=2.4.0
 colorlog~=4.7.2
 nibabel~=3.2.1
-Keras~=2.2.4
+Keras~=2.3.1
 importlib_resources; python_version<"3.7"

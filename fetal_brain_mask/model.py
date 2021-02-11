@@ -1,3 +1,5 @@
+import keras
+from tensorflow.python.keras.backend import set_session
 from keras.models import model_from_json
 from keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
@@ -18,6 +20,12 @@ class Unet:
     def __init__(self):
         logger.debug('Using unet')
 
+        # Tensorflow session and graph are not thread safe
+        # Session needs to be set per thread below in predict_mask
+        # https://github.com/tensorflow/tensorflow/issues/28287#issuecomment-495005162
+        self.session = keras.backend.get_session()
+        self.graph = tf.compat.v1.get_default_graph()
+
         logger.debug('Loading model')
         json_model = files(f'{__package__}.data').joinpath('unet_model.json').read_text()
         self.unet_model = model_from_json(json_model)
@@ -26,7 +34,6 @@ class Unet:
         weight_path = files(f'{__package__}.data').joinpath('unet_weights.h5')
         self.unet_model.load_weights(str(weight_path))
 
-        self.graph = tf.compat.v1.get_default_graph()
         logger.debug('Model initialized')
 
     @staticmethod
@@ -49,8 +56,8 @@ class Unet:
         """
         image_gen = self.get_generator(image)
 
-        # https://github.com/tensorflow/tensorflow/issues/14356#issuecomment-447588953
         with self.graph.as_default():
+            set_session(self.session)
             mask = self.unet_model.predict_generator(image_gen, steps=len(image))
 
         # only keep pixels with more than 0.5% probability of being brain
