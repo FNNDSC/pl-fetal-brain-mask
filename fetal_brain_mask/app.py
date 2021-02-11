@@ -144,8 +144,9 @@ class Fetal_brain_mask(ChrisApp):
 
         if options.skipped_list:
             skipped = [fname for fname, success in zip(output_files, successes) if not success]
-            with open(path.join(options.outputdir, options.skipped_list)) as f:
-                f.writelines(skipped)
+            skipped_text = '\n'.join(skipped)
+            with open(path.join(options.outputdir, options.skipped_list), 'w') as f:
+                f.write(skipped_text)
 
     def show_man_page(self):
         """
