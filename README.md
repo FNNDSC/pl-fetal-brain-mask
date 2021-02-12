@@ -13,6 +13,7 @@ For each `.nii` or `.nii.gz` file in a directory, a `_mask.nii` is produced.
 
 ```
 $ docker run --rm fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask --help 2> /dev/null
+
 usage: fetal_brain_mask [-h] [--json] [--savejson DIR] [--inputmeta INPUTMETA]
                         [--saveinputmeta] [--saveoutputmeta] [--version]
                         [--meta] [-v VERBOSITY] [--man] [-p INPUTPATHFILTER]
@@ -27,17 +28,9 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --json                show json representation of app and exit (default:
-                        False)
-  --savejson DIR        save json representation file to DIR and exit
-                        (default: None)
-  --inputmeta INPUTMETA
-                        meta data file containing the arguments passed to this
-                        app (default: None)
-  --saveinputmeta       save arguments to a JSON file (default: False)
-  --saveoutputmeta      save output meta data to a JSON file (default: False)
-  --version             print app version and exit (default: False)
-  --meta                print app meta data and exit (default: False)
+  --json                show json representation of app and exit
+  --version             print app version and exit
+  --meta                print app meta data and exit
   -v VERBOSITY, --verbosity VERBOSITY
                         verbosity level for the app (default: 0)
   --man                 show the app's man page and exit (default: False)
