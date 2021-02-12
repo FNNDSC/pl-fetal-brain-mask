@@ -11,10 +11,10 @@ from chrisapp.base import ChrisApp
 from argparse import ArgumentDefaultsHelpFormatter
 import colorlog
 import logging
+import os
 from os import path
 from glob import glob
 from concurrent.futures import ThreadPoolExecutor
-import multiprocessing
 import tensorflow as tf
 
 from fetal_brain_mask.predict import MaskingTool
@@ -139,7 +139,7 @@ class Fetal_brain_mask(ChrisApp):
                 return False
 
         # if we develop a GPU version, then change max_workers to GPU count
-        with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as pool:
+        with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
             successes = pool.map(lambda t: mask_nofail(*t), zip(input_files, output_files))
 
         if options.skipped_list:
