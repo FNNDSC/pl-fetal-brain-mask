@@ -11,29 +11,58 @@ For each `.nii` or `.nii.gz` file in a directory, a `_mask.nii` is produced.
 
 ##  Usage
 
-Single sample
+Single sample, minimum example
 
 ```bash
 mkdir in out
 mv scan.nii.gz in
 
-docker run --rm -u $(id -u):$(id -g) \
+docker run --rm  \
     -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
     fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
-    --inputPathFilter scan.nii.gz --suffix _mask.nii \
-    --skipped-list skipped.txt
+    /incoming /outgoing
+```
+
+User-friendly settings for Docker
+
+```bash
+docker run --rm -u $(id -u):$(id -g)                  \
+    -v /etc/localtime:/etc/localtime:ro               \
+    -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
+    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
+    /incoming /outgoing
+```
+
+Specifying filenames
+
+```bash
+docker run --rm -u $(id -u):$(id -g)                  \
+    -v /etc/localtime:/etc/localtime:ro               \
+    -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
+    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
+    --inputPathFilter scan.nii.gz --suffix _mask.nii  \
+    --skipped-list skipped.txt                        \
+    /incoming /outgoing
+
 ```
 
 Multiple inputs are processed in parallel, using all the cores visible inside the container.
 For large datasets, you can limit the number of concurrent jobs to `N` jobs with `docker run --cpuset-cpus 0-$((N-1))`
 
 ```bash
+mkdir in out
+mv scan0001.nii.gz scan0002.nii.gz scan0003.nii.gz scan0004.nii.gz \
+   scan0005.nii.gz scan0006.nii.gz scan0007.nii.gz scan0008.nii.gz in
+
 # limit to 5 concurrent jobs
-docker run --rm -u $(id -u):$(id -g) --cpuset-cpus 0-4 \
+docker run --rm -u $(id -u):$(id -g)                   \
+    -v /etc/localtime:/etc/localtime:ro                \
+    --cpuset-cpus 0-4                                  \
     -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw   \
     fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask  \
-    --inputPathFilter scan.nii.gz --suffix _mask.nii   \
-    --skipped-list skipped.txt
+    --inputPathFilter 'scan????.nii.gz'                \
+    --skipped-list skipped.txt                         \
+    /incoming /outgoing
 ```
 
 See `docker run --help` for other throttling options.
