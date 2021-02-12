@@ -17,8 +17,8 @@ Single sample
 mkdir in out
 mv scan.nii.gz in
 
-docker run --rm -u $(id -u) \
-    -v $PWD/in:/incoming -v $PWD/out:/outgoing \
+docker run --rm -u $(id -u):$(id -g) \
+    -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
     fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
     --inputPathFilter scan.nii.gz --suffix _mask.nii \
     --skipped-list skipped.txt
@@ -28,8 +28,8 @@ Multiple inputs are processed in parallel, using all the cores visible inside th
 For large datasets, you can limit the number of concurrent jobs with `docker run --cpus N ...`
 
 ```bash
-docker run --rm -u $(id -u) --cpus 4 \
-    -v $PWD/in:/incoming -v $PWD/out:/outgoing \
+docker run --rm -u $(id -u):$(id -g) --cpus 4 \
+    -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
     fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
     --inputPathFilter scan.nii.gz --suffix _mask.nii \
     --skipped-list skipped.txt
