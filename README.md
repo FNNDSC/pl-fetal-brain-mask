@@ -25,19 +25,20 @@ docker run --rm -u $(id -u):$(id -g) \
 ```
 
 Multiple inputs are processed in parallel, using all the cores visible inside the container.
-For large datasets, you can limit the number of concurrent jobs with `docker run --cpus N ...`
+For large datasets, you can limit the number of concurrent jobs to `N` jobs with `docker run --cpuset-cpus 0-$((N-1))`
 
 ```bash
-docker run --rm -u $(id -u):$(id -g) --cpus 4 \
-    -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
-    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
-    --inputPathFilter scan.nii.gz --suffix _mask.nii \
+# limit to 5 concurrent jobs
+docker run --rm -u $(id -u):$(id -g) --cpuset-cpus 0-4 \
+    -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw   \
+    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask  \
+    --inputPathFilter scan.nii.gz --suffix _mask.nii   \
     --skipped-list skipped.txt
 ```
 
 See `docker run --help` for other throttling options.
 
-Some unnessessary tensorflow output can be silcence
+Some (not all) unnessessary tensorflow output can be silcence
 
 ```bash
 docker run --rm -e TF_CPP_MIN_LOG_LEVEL=3 fnndsc/pl-fetal-brain-mask:1.0.0
