@@ -1,7 +1,7 @@
 # Fetal Brain Mask
 
-[![Version](https://img.shields.io/docker/v/fnndsc/pl-fetal-brain-masking?sort=semver)](https://hub.docker.com/r/fnndsc/pl-fetal-brain-masking)
-[![MIT License](https://img.shields.io/github/license/fnndsc/pl-fetal-brain-masking)](https://github.com/FNNDSC/pl-fetal-brain-masking/blob/master/LICENSE)
+[![Version](https://img.shields.io/docker/v/fnndsc/pl-fetal-brain-mask?sort=semver)](https://hub.docker.com/r/fnndsc/pl-fetal-brain-mask)
+[![MIT License](https://img.shields.io/github/license/fnndsc/pl-fetal-brain-mask)](https://github.com/FNNDSC/pl-fetal-brain-mask/blob/master/LICENSE)
 
 Automatic brain image masking tool for fetal brain MRI using deep learning.
 
