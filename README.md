@@ -11,6 +11,51 @@ For each `.nii` or `.nii.gz` file in a directory, a `_mask.nii` is produced.
 
 ##  Usage
 
+```
+$ docker run --rm fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask --help 2> /dev/null
+usage: fetal_brain_mask [-h] [--json] [--savejson DIR] [--inputmeta INPUTMETA]
+                        [--saveinputmeta] [--saveoutputmeta] [--version]
+                        [--meta] [-v VERBOSITY] [--man] [-p INPUTPATHFILTER]
+                        [-o SUFFIX] [-s] [-l SKIPPED_LIST]
+                        inputdir outputdir
+
+Automatic masking of fetal brain images using deep learning
+
+positional arguments:
+  inputdir              directory containing the input files
+  outputdir             directory containing the output files/folders
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --json                show json representation of app and exit (default:
+                        False)
+  --savejson DIR        save json representation file to DIR and exit
+                        (default: None)
+  --inputmeta INPUTMETA
+                        meta data file containing the arguments passed to this
+                        app (default: None)
+  --saveinputmeta       save arguments to a JSON file (default: False)
+  --saveoutputmeta      save output meta data to a JSON file (default: False)
+  --version             print app version and exit (default: False)
+  --meta                print app meta data and exit (default: False)
+  -v VERBOSITY, --verbosity VERBOSITY
+                        verbosity level for the app (default: 0)
+  --man                 show the app's man page and exit (default: False)
+  -p INPUTPATHFILTER, --inputPathFilter INPUTPATHFILTER
+                        selection for which files to evaluate (default:
+                        **.nii[,.gz])
+  -o SUFFIX, --suffix SUFFIX
+                        output filename suffix (default: _mask.nii)
+  -s, --smooth          perform post-processing on images including
+                        morphological closing and defragmentation (default:
+                        True)
+  -l SKIPPED_LIST, --skipped-list SKIPPED_LIST
+                        produce an output file containing the names of files
+                        which were skipped (default: )
+```
+
+## Examples
+
 Single sample, minimum example
 
 ```bash
