@@ -6,7 +6,7 @@ with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
 
 setup(
     name             = 'fetal_brain_mask',
-    version          = '1.0.0',
+    version          = '1.0.1',
     description      = 'Automatic masking of fetal brain images using deep learning',
     long_description = readme,
     author           = 'Alejandro Valdes',
