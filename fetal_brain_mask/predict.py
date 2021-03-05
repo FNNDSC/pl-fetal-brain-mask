@@ -14,11 +14,7 @@ class MaskingTool:
     def __init__(self):
         self.model = Unet()
 
-    def create_mask(self, input_filename: str,  output_filename: str, smoothen=True):
-        logger.info('Processing ' + input_filename)
-
-        image = nib.load(input_filename)
-        data = image.get_fdata(caching='unchanged')
+    def mask_tensor(self, data, smoothen=True):
         # axes have to be switched from (256,256,x) to (x,256,256)
         data = np.moveaxis(data, -1, 0)
         # normalize each image slice
@@ -51,10 +47,7 @@ class MaskingTool:
         data = np.squeeze(data)
         # return result into shape (256,256, X)
         data = np.moveaxis(data, 0, -1)
-
-        # create Nifti object with same header, but new data
-        image = image.__class__(data, image.affine, header=image.header)
-        nib.save(image, output_filename)
+        return data
 
     @staticmethod
     def normalize_uint8(img_slice):

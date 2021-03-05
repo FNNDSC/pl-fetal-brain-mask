@@ -14,8 +14,11 @@ import logging
 import os
 from os import path
 from glob import glob
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 import tensorflow as tf
+import nibabel as nib
+import numpy as np
 
 from fetal_brain_mask.predict import MaskingTool
 
@@ -49,8 +52,8 @@ class Fetal_brain_mask(ChrisApp):
     CATEGORY                = 'Segmentation'
     TYPE                    = 'ds'
     ICON                    = '' # url of an icon image
-    MAX_NUMBER_OF_WORKERS   = 1  # Override with integer value
-    MIN_NUMBER_OF_WORKERS   = 0  # Override with integer value
+    MAX_NUMBER_OF_WORKERS   = 60 # Override with integer value
+    MIN_NUMBER_OF_WORKERS   = 1  # Override with integer value
     MAX_CPU_LIMIT           = '' # Override with millicore value as string, e.g. '2000m'
     MIN_CPU_LIMIT           = '' # Override with millicore value as string, e.g. '2000m'
     MAX_MEMORY_LIMIT        = '' # Override with string, e.g. '1Gi', '2000Mi'
@@ -87,6 +90,40 @@ class Fetal_brain_mask(ChrisApp):
             optional=True
         )
         self.add_argument(
+            '-i', '--input-destination',
+            dest='copy_input',
+            help='copy input files into a subdirectory of the output directory',
+            default='',
+            type=str,
+            optional=True
+        )
+        self.add_argument(
+            '--overlay-destination',
+            dest='overlay_destination',
+            help='create volumes in given directory where the mask is overlayed '
+                 'on the source image, '
+                 'Useful for visualization.',
+            default='',
+            type=str,
+            optional=True
+        )
+        self.add_argument(
+            '--overlay-suffix',
+            dest='overlay_suffix',
+            help='file name suffix for overlays, if needed.',
+            default='_mask_overlay.nii',
+            type=str,
+            optional=True
+        )
+        self.add_argument(
+            '--overlay-background',
+            dest='overlay_background',
+            help='intensity scale for masked-out portion in the optional overlay.',
+            default=0.2,
+            type=float,
+            optional=True
+        )
+        self.add_argument(
             '-o', '--suffix',
             type=str,
             optional=True,
@@ -115,23 +152,50 @@ class Fetal_brain_mask(ChrisApp):
         """
         Define the code to be run by this plugin app.
         """
-        # legacy thing in chrisapp==2.1.0
-        verbosity = int(options.verbosity)
-        if verbosity > 0:
-            print(Gstr_title, flush=True)
-            print('Version: %s' % self.get_version(), flush=True)
-            logger.setLevel(logging.DEBUG if verbosity > 1 else logging.INFO)
-
-        tf.get_logger().setLevel(logging.getLevelName(logger.level))
+        self.set_verbosity(options.verbosity)
 
         input_files = glob(path.join(options.inputdir, options.inputPathFilter), recursive=True)
-        output_files = [self.resolve_output_filename(f, options.outputdir) for f in input_files]
+
+        if options.copy_input:
+            copy_dest = path.join(options.outputdir, options.copy_input)
+            copy_dest = path.normpath(copy_dest)
+            if copy_dest != options.outputdir:
+                os.mkdir(copy_dest)
+            for input_file in input_files:
+                copy_file = path.join(copy_dest, path.basename(input_file))
+                shutil.copyfile(input_file, copy_file)
+
+        overlay_folder = None
+        if options.overlay_destination:
+            overlay_folder = path.join(options.outputdir, options.overlay_destination)
+            overlay_folder = path.normpath(overlay_folder)
+            os.mkdir(overlay_folder)
 
         masker = MaskingTool()
 
-        def mask_nofail(input_filename: str, output_filename) -> bool:
+        def process_nofail(input_filename: str) -> bool:
             try:
-                masker.create_mask(input_filename, output_filename, options.smooth)
+                logger.info('Processing ' + input_filename)
+                input_basename = path.basename(input_filename)
+
+                src_vol = nib.load(input_filename)
+                src_data = src_vol.get_fdata(caching='unchanged')
+                mask_data = masker.mask_tensor(src_data, options.smooth)
+
+                def save(data, outputdir, suffix):
+                    output_basename = self.change_nii_extension(input_basename, suffix)
+                    output_filename = path.join(outputdir, output_basename)
+                    # create Nifti object with same header, but new data
+                    out_vol = src_vol.__class__(data, src_vol.affine, header=src_vol.header)
+                    nib.save(out_vol, output_filename)
+
+                save(mask_data, options.outputdir, options.suffix)
+
+                if overlay_folder:
+                    over_data = np.clip(mask_data, options.overlay_background, 1.0)
+                    over_data *= src_data
+                    save(over_data, overlay_folder, options.overlay_suffix)
+
                 return True
             except Exception as e:
                 logger.error(e)
@@ -140,10 +204,10 @@ class Fetal_brain_mask(ChrisApp):
 
         # if we develop a GPU version, then change max_workers to GPU count
         with ThreadPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as pool:
-            successes = pool.map(lambda t: mask_nofail(*t), zip(input_files, output_files))
+            successes = pool.map(lambda t: process_nofail(t), input_files)
 
         if options.skipped_list:
-            skipped = [fname for fname, success in zip(output_files, successes) if not success]
+            skipped = [fname for fname, success in zip(input_files, successes) if not success]
             skipped_text = '\n'.join(skipped)
             with open(path.join(options.outputdir, options.skipped_list), 'w') as f:
                 f.write(skipped_text)
@@ -155,10 +219,15 @@ class Fetal_brain_mask(ChrisApp):
         self.print_help()
 
     @classmethod
-    def resolve_output_filename(cls, input_filename, outputdir, suffix='_mask.nii'):
-        input_basename = path.basename(input_filename)
-        output_basename = cls.change_nii_extension(input_basename, suffix)
-        return path.join(outputdir, output_basename)
+    def set_verbosity(cls, verbosity):
+        # legacy thing in chrisapp==2.1.0
+        verbosity = int(verbosity)
+        if verbosity > 0:
+            print(Gstr_title, flush=True)
+            print('Version: %s' % cls.get_version(), flush=True)
+            logger.setLevel(logging.DEBUG if verbosity > 1 else logging.INFO)
+
+        tf.get_logger().setLevel(logging.getLevelName(logger.level))
 
     @staticmethod
     def change_nii_extension(filename: str, suffix):

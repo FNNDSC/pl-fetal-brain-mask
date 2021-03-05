@@ -17,7 +17,11 @@ $ docker run --rm fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask --help 2> /d
 usage: fetal_brain_mask [-h] [--json] [--savejson DIR] [--inputmeta INPUTMETA]
                         [--saveinputmeta] [--saveoutputmeta] [--version]
                         [--meta] [-v VERBOSITY] [--man] [-p INPUTPATHFILTER]
-                        [-o SUFFIX] [-s] [-l SKIPPED_LIST]
+                        [-i COPY_INPUT]
+                        [--overlay-destination OVERLAY_DESTINATION]
+                        [--overlay-suffix OVERLAY_SUFFIX]
+                        [--overlay-background OVERLAY_BACKGROUND] [-o SUFFIX]
+                        [-s] [-l SKIPPED_LIST]
                         inputdir outputdir
 
 Automatic masking of fetal brain images using deep learning
@@ -28,15 +32,36 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --json                show json representation of app and exit
-  --version             print app version and exit
-  --meta                print app meta data and exit
+  --json                show json representation of app and exit (default:
+                        False)
+  --savejson DIR        save json representation file to DIR and exit
+                        (default: None)
+  --inputmeta INPUTMETA
+                        meta data file containing the arguments passed to this
+                        app (default: None)
+  --saveinputmeta       save arguments to a JSON file (default: False)
+  --saveoutputmeta      save output meta data to a JSON file (default: False)
+  --version             print app version and exit (default: False)
+  --meta                print app meta data and exit (default: False)
   -v VERBOSITY, --verbosity VERBOSITY
                         verbosity level for the app (default: 0)
   --man                 show the app's man page and exit (default: False)
   -p INPUTPATHFILTER, --inputPathFilter INPUTPATHFILTER
                         selection for which files to evaluate (default:
                         **.nii[,.gz])
+  -i COPY_INPUT, --input-destination COPY_INPUT
+                        copy input files into a subdirectory of the output
+                        directory (default: )
+  --overlay-destination OVERLAY_DESTINATION
+                        create volumes in given directory where the mask is
+                        overlayed on the source image, Useful for
+                        visualization. (default: )
+  --overlay-suffix OVERLAY_SUFFIX
+                        file name suffix for overlays, if needed. (default:
+                        _mask_overlay.nii)
+  --overlay-background OVERLAY_BACKGROUND
+                        intensity scale for masked-out portion in the optional
+                        overlay. (default: 0.2)
   -o SUFFIX, --suffix SUFFIX
                         output filename suffix (default: _mask.nii)
   -s, --smooth          perform post-processing on images including
@@ -61,29 +86,6 @@ docker run --rm  \
     /incoming /outgoing
 ```
 
-User-friendly settings for Docker
-
-```bash
-docker run --rm -u $(id -u):$(id -g)                  \
-    -v /etc/localtime:/etc/localtime:ro               \
-    -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
-    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
-    /incoming /outgoing
-```
-
-Specifying filenames
-
-```bash
-docker run --rm -u $(id -u):$(id -g)                  \
-    -v /etc/localtime:/etc/localtime:ro               \
-    -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
-    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
-    --inputPathFilter scan.nii.gz --suffix _mask.nii  \
-    --skipped-list skipped.txt                        \
-    /incoming /outgoing
-
-```
-
 Multiple inputs are processed in parallel, using all the cores visible inside the container.
 For large datasets, you can limit the number of concurrent jobs to `N` jobs with `docker run --cpuset-cpus 0-$((N-1))`
 
@@ -100,6 +102,7 @@ docker run --rm -u $(id -u):$(id -g)                   \
     fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask  \
     --inputPathFilter 'scan????.nii.gz'                \
     --skipped-list skipped.txt                         \
+    --verbosity 5                                      \
     /incoming /outgoing
 ```
 
@@ -110,6 +113,20 @@ Some (not all) unnessessary tensorflow output can be silcence
 ```bash
 docker run --rm -e TF_CPP_MIN_LOG_LEVEL=3 fnndsc/pl-fetal-brain-mask:1.0.0
 ```
+
+## Running on ChRIS
+
+![https://chrisstore.co/](docs/badge.png)
+
+The option `--input-destination input` facilitates access to data by downstream plugins.
+
+`--overlay-destination overlay`, followed by
+[`pl-pfdo_med2img`](https://chrisstore.co/plugin/56)
+is useful for visualization of masking results via *ChRIS_ui*.
+
+## Potential Future Features
+
+- [ ] `--overlay-background` accepts multiple values so user can experiment with different values, and also directly output the masked brain with the value of 0.0
 
 ## Links
 
