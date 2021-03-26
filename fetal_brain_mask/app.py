@@ -84,66 +84,36 @@ class Fetal_brain_mask(ChrisApp):
         self.add_argument(
             '-p', '--inputPathFilter',
             dest='inputPathFilter',
-            help='selection for which files to evaluate',
-            default='**.nii[,.gz]',
-            type=str,
-            optional=True
-        )
-        self.add_argument(
-            '-i', '--input-destination',
-            dest='copy_input',
-            help='copy input files into a subdirectory of the output directory',
-            default='',
-            type=str,
-            optional=True
-        )
-        self.add_argument(
-            '--overlay-destination',
-            dest='overlay_destination',
-            help='create volumes in given directory where the mask is overlayed '
-                 'on the source image, '
-                 'Useful for visualization.',
-            default='',
-            type=str,
-            optional=True
-        )
-        self.add_argument(
-            '--overlay-suffix',
-            dest='overlay_suffix',
-            help='file name suffix for overlays, if needed.',
-            default='_mask_overlay.nii',
+            help='selection (glob) for which files to evaluate',
+            default='*.nii',
             type=str,
             optional=True
         )
         self.add_argument(
             '--overlay-background',
             dest='overlay_background',
-            help='intensity scale for masked-out portion in the optional overlay.',
-            default=0.2,
-            type=float,
+            help='multiplier for values of masked voxels, '
+                 'given as a comma-separated list of numbers [0, 1). '
+                 "'0.0' effectively produces the extracted brain. "
+                 "A low, non-zero value such as '0.2' produces volumes which "
+                 "are helpful for visualization.",
+            default='0.0,0.2',
+            type=str,
             optional=True
         )
         self.add_argument(
-            '-o', '--suffix',
-            type=str,
-            optional=True,
-            default='_mask.nii',
-            dest='suffix',
-            help='output filename suffix'
-        )
-        self.add_argument(
-            '-s', '--smooth',
+            '-s', '--no-smooth',
             type=bool,
             optional=True,
-            default=True,
-            dest='smooth',
-            help='perform post-processing on images including morphological closing and defragmentation'
+            default=False,
+            dest='no_smooth',
+            help='skip post-processing on images including morphological closing and defragmentation'
         )
         self.add_argument(
             '-l', '--skipped-list',
             type=str,
             optional=True,
-            default='',
+            default='mask_skipped.txt',
             dest='skipped_list',
             help='produce an output file containing the names of files which were skipped'
         )
@@ -154,22 +124,17 @@ class Fetal_brain_mask(ChrisApp):
         """
         self.set_verbosity(options.verbosity)
 
-        input_files = glob(path.join(options.inputdir, options.inputPathFilter), recursive=True)
+        input_files = glob(path.join(options.inputdir, options.inputPathFilter))
+        mask_folder = path.join(options.outputdir, 'mask')
+        os.mkdir(mask_folder)
 
-        if options.copy_input:
-            copy_dest = path.join(options.outputdir, options.copy_input)
-            copy_dest = path.normpath(copy_dest)
-            if copy_dest != options.outputdir:
-                os.mkdir(copy_dest)
-            for input_file in input_files:
-                copy_file = path.join(copy_dest, path.basename(input_file))
-                shutil.copyfile(input_file, copy_file)
-
-        overlay_folder = None
-        if options.overlay_destination:
-            overlay_folder = path.join(options.outputdir, options.overlay_destination)
-            overlay_folder = path.normpath(overlay_folder)
+        overlay_folder = path.join(options.outputdir, 'extracted')
+        bg_mult = None
+        if options.overlay_background:
             os.mkdir(overlay_folder)
+            bg_mult = [float(s.strip()) for s in options.overlay_background.split(',')]
+            for mult in bg_mult:
+                os.mkdir(path.join(overlay_folder, str(mult)))
 
         masker = MaskingTool()
 
@@ -180,7 +145,7 @@ class Fetal_brain_mask(ChrisApp):
 
                 src_vol = nib.load(input_filename)
                 src_data = src_vol.get_fdata(caching='unchanged')
-                mask_data = masker.mask_tensor(src_data, options.smooth)
+                mask_data = masker.mask_tensor(src_data, not options.no_smooth)
 
                 def save(data, outputdir, suffix):
                     output_basename = self.change_nii_extension(input_basename, suffix)
@@ -189,12 +154,12 @@ class Fetal_brain_mask(ChrisApp):
                     out_vol = src_vol.__class__(data, src_vol.affine, header=src_vol.header)
                     nib.save(out_vol, output_filename)
 
-                save(mask_data, options.outputdir, options.suffix)
+                save(mask_data, mask_folder, '_mask.nii')
 
-                if overlay_folder:
-                    over_data = np.clip(mask_data, options.overlay_background, 1.0)
+                for mult in bg_mult:
+                    over_data = np.clip(mask_data, mult, 1.0)
                     over_data *= src_data
-                    save(over_data, overlay_folder, options.overlay_suffix)
+                    save(over_data, path.join(overlay_folder, str(mult)), '_brain.nii')
 
                 return True
             except Exception as e:
