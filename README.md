@@ -1,4 +1,8 @@
-# Fetal Brain Mask
+# Deprecated
+
+This program is superseded by [pl-emerald](https://github.com/FNNDSC/pl-emerald).
+
+## Fetal Brain Mask
 
 [![Version](https://img.shields.io/docker/v/fnndsc/pl-fetal-brain-mask?sort=semver)](https://hub.docker.com/r/fnndsc/pl-fetal-brain-mask)
 [![MIT License](https://img.shields.io/github/license/fnndsc/pl-fetal-brain-mask)](https://github.com/FNNDSC/pl-fetal-brain-mask/blob/master/LICENSE)
@@ -12,7 +16,7 @@ For each `.nii` or `.nii.gz` file in a directory, a `_mask.nii` is produced.
 ##  Usage
 
 ```
-$ docker run --rm fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask --help 2> /dev/null
+$ docker run --rm fnndsc/pl-fetal-brain-mask:latest fetal_brain_mask --help 2> /dev/null
 
 usage: fetal_brain_mask [-h] [--json] [--savejson DIR] [--inputmeta INPUTMETA]
                         [--saveinputmeta] [--saveoutputmeta] [--version]
@@ -82,7 +86,7 @@ mv scan.nii.gz in
 
 docker run --rm  \
     -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw  \
-    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask \
+    fnndsc/pl-fetal-brain-mask:latest fetal_brain_mask \
     /incoming /outgoing
 ```
 
@@ -99,7 +103,7 @@ docker run --rm -u $(id -u):$(id -g)                   \
     -v /etc/localtime:/etc/localtime:ro                \
     --cpuset-cpus 0-4                                  \
     -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw   \
-    fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask  \
+    fnndsc/pl-fetal-brain-mask:latest fetal_brain_mask  \
     --inputPathFilter 'scan????.nii.gz'                \
     --skipped-list skipped.txt                         \
     --verbosity 5                                      \
@@ -111,7 +115,7 @@ See `docker run --help` for other throttling options.
 Some (not all) unnessessary tensorflow output can be silcence
 
 ```bash
-docker run --rm -e TF_CPP_MIN_LOG_LEVEL=3 fnndsc/pl-fetal-brain-mask:1.0.0
+docker run --rm -e TF_CPP_MIN_LOG_LEVEL=3 fnndsc/pl-fetal-brain-mask:latest
 ```
 
 ## Running on ChRIS
